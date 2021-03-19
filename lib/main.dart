@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomeScreen(),//ShowMapScreen(),//MapSample(),//
+      home: HomeScreen(),
       routes:{
         ShareLocationScreen.routeName:(_)=>ShareLocationScreen(),
         ShowMapScreen.routeName:(_)=>ShowMapScreen(),

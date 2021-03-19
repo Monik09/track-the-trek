@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import "package:flutter/material.dart";
-import 'package:geolocator/geolocator.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:location/location.dart';
@@ -12,15 +12,20 @@ class MapWidget extends StatefulWidget {
   final bool isSharee;
   final String userName;
   final String cryptoUsername;
-  MapWidget(this.isSharee, this.userName, this.cryptoUsername);
+  final String expiryTime;
+  MapWidget(this.isSharee, this.userName, this.cryptoUsername, this.expiryTime);
   @override
   _MapWidgetState createState() => _MapWidgetState();
 }
 
-class _MapWidgetState extends State<MapWidget> {
-  bool isSharee = false;
-  String userName = "TSET";
+class _MapWidgetState extends State<MapWidget>
+    with AutomaticKeepAliveClientMixin {
+  bool isSharee = true;
+  String userName = "";
   String cryptoResult = "";
+  String expiryTime = "a";
+  double durationHosting = 1;
+  bool isTimeout = false;
   Completer<GoogleMapController> _controller = Completer();
   GoogleMapController mapController;
   Set<Marker> _marker = Set<Marker>();
@@ -28,53 +33,70 @@ class _MapWidgetState extends State<MapWidget> {
   int i = 0;
   LocationData currentLocationData;
   LocationData locationDataForViewer;
+  var dbListener;
   final databaseReference = FirebaseDatabase.instance.reference();
+  final navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     isSharee = widget.isSharee;
     userName = widget.userName;
+    expiryTime = widget.expiryTime;
     cryptoResult = widget.cryptoUsername;
     log(isSharee.toString() + " " + userName);
     log("h1");
     location = new Location();
+    location.isBackgroundModeEnabled();
+
     if (isSharee) {
       log("h2");
-      location.onLocationChanged.listen((LocationData cLoc) {
-        // setState(() {
+      dbListener = location.onLocationChanged.listen((LocationData cLoc) {
         currentLocationData = cLoc;
-        // });
         //data save
         log("I am changing!!-> " + currentLocationData.toString());
+        // SchedulerBinding.instance
+        //     .addPostFrameCallback((_) =>
         submitUserData(cLoc);
-        mapController.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(cLoc.latitude, cLoc.longitude),
-              zoom: 16.4746,
+        //  );
+        if (isTimeout) {
+          log("inside timeout");
+        }
+        if (_controller.isCompleted) {
+          mapController.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(cLoc.latitude, cLoc.longitude),
+                zoom: 16.4746,
+              ),
             ),
-          ),
-        );
+          );
+        }
       });
     } else {
       // readData();
       log("in else part");
       var map;
-      databaseReference.child("locData").child(cryptoResult).onValue.listen(
+      dbListener =
+          databaseReference.child("locData").child(cryptoResult).onValue.listen(
         (event) {
           map = event.snapshot.value;
           log("________" + map.toString());
+          print("_______________" + map.toString());
           LocationData results = LocationData.fromMap(
             {
               "latitude": double.parse(map["lat"].toString()),
               "longitude": double.parse(map["lon"].toString()),
             },
           );
+          log(isTimeout.toString());
           setState(() {
             currentLocationData = results;
           });
-          if (i != 0)
+          if (i != 0) {
             mapController.animateCamera(
               CameraUpdate.newCameraPosition(
                 CameraPosition(
@@ -84,6 +106,21 @@ class _MapWidgetState extends State<MapWidget> {
                 ),
               ),
             );
+          }
+          log(isTimeout.toString());
+          print(map["passkeyExpiryUTC"].toString() +
+              "   " +
+              (DateTime.now().toUtc().toIso8601String()));
+          if (map["passkeyExpiryUTC"]
+                  .toString()
+                  .compareTo(DateTime.now().toUtc().toIso8601String()) <=
+              0) {
+            isTimeout = true;
+            log(isTimeout.toString());
+            // setState(() {
+            isTimeout = true;
+            // });
+          }
           i = 1;
           log("i<--->" + i.toString());
           log(currentLocationData.toString());
@@ -111,114 +148,219 @@ class _MapWidgetState extends State<MapWidget> {
 
   void dispose() {
     super.dispose();
+    mapController.dispose();
   }
 
-  Future<void> submitUserData(LocationData cLoc) async {
-    log(cryptoResult);
-    var result = await http.put(
-      // "https://cf-pursuit-default-rtdb.firebaseio.com/users/$userName.json",
-      Uri.parse(
-          "https://track-me-beacon-default-rtdb.firebaseio.com/locData/$cryptoResult.json"),
-      body: json.encode(
-        {
-          "lat": cLoc.latitude,
-          "lon": cLoc.longitude,
-        },
-      ),
+  void handleTimeout(BuildContext context) async {
+    log(isTimeout.toString());
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            height: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(
+                Radius.circular(16),
+              ),
+              color: Colors.white,
+            ),
+            width: MediaQuery.of(context).size.width * 0.9,
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Container(
+                  height: 70,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        width: 1,
+                        color: Colors.grey[300],
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'The passkey expired! Try reaching out to host for new passkey!',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Navigator.of(context).push;
+                    // Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    "OK",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
-    if (result.statusCode == 200) {
-      log("hurray!User details added successfully!!");
-    } else {
-      print(result.body);
-      log("nope,error in adding user to database");
+    log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!timeout");
+    log(isTimeout.toString());
+  }
+
+  int k = 0;
+  Future<void> submitUserData(LocationData cLoc) async {
+    log(cLoc.toString());
+    log(cryptoResult);
+    try {
+      var result = await http.put(
+        // "https://cf-pursuit-default-rtdb.firebaseio.com/users/$userName.json",
+        Uri.parse(
+            "https://track-me-beacon-default-rtdb.firebaseio.com/locData/$cryptoResult.json"),
+        body: json.encode(
+          {
+            "lat": cLoc.latitude,
+            "lon": cLoc.longitude,
+            "passkeyExpiryUTC": expiryTime,
+          },
+        ),
+      );
+      if (result.statusCode == 200 && k == 0) {
+        Map<String, dynamic> mapData =
+            json.decode(result.body.toString()) as Map<String, dynamic>;
+        log(mapData.toString());
+        log(mapData["passkeyExpiryUTC"].toString() +
+            "      " +
+            DateTime.now().toUtc().toIso8601String());
+        log(isTimeout.toString());
+        if (mapData["passkeyExpiryUTC"]
+                .toString()
+                .compareTo(DateTime.now().toUtc().toIso8601String()) <=
+            0) {
+          k = 1;
+          log(isTimeout.toString());
+          log("Timeout!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+          isTimeout = true;
+          log(isTimeout.toString());
+          setState(() {
+            isTimeout = true;
+          });
+        }
+        log("hurray!User details added successfully!!");
+        log(isTimeout.toString());
+      } else {
+        log(result.body);
+        log("nope,error in adding user to database");
+        log(isTimeout.toString());
+      }
+    } catch (e) {
+      log(e.message);
     }
   }
-
-  // void readData() {
-  //   List<double> l = [1, 1];
-  //   int i = 0;
-  //   databaseReference
-  //       .child("locData")
-  //       .child(cryptoResult)
-  //       .onChildChanged
-  //       .listen(
-  //     (event) {
-  //       (i % 2 == 0)
-  //           ? l[0] = event.snapshot.value
-  //           : l[1] = event.snapshot.value;
-  //       i = 1 - i;
-  //       // log("[[[][][][][->......." + event.snapshot.value.toString());
-  //       log("_________-----LAtitude________" + l[0].toString());
-  //       log("_________-----Longitude________" + l[1].toString());
-  //       LocationData results =
-  //           LocationData.fromMap({"latitude": l[0], "longitude": l[1]});
-  //       // setState(() {
-  //       currentLocationData = results;
-  //       mapController.animateCamera(
-  //         CameraUpdate.newCameraPosition(
-  //           CameraPosition(
-  //               target: LatLng(currentLocationData.latitude,
-  //                   currentLocationData.longitude),
-  //               zoom: 15.780),
-  //         ),
-  //       );
-  //       // });
-  //       log("--------------------------------------------->>>>>>>>>>>>" +
-  //           results.toString());
-  //     },
-  //   );
-
-  // }
-  // );
-
-  // var result = await http.get(
-  //   // "https://cf-pursuit-default-rtdb.firebaseio.com/users/$userName.json",
-  //   Uri.parse(
-  //       "https://track-me-beacon-default-rtdb.firebaseio.com/locData/$cryptoResult.json"),
-  // );
-  // if (result.statusCode == 200) {
-  //   log("*****************************" + result.body.toString());
-  // } else {
-  //   print(result.body);
-  //   log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!nope,error in adding user to database");
-  // }
 
   void setInitialLocation() async {
     currentLocationData = await location.getLocation();
     log("currentLocation Data " + currentLocationData.toString());
   }
 
-  // void updatePinOnMap() async {
-  //   CameraPosition cPosition = CameraPosition(
-  //     zoom: 14,
-  //     tilt: 59.440717697143555,
-  //     bearing: 192.8,
-  //     target:
-  //         LatLng(currentLocationData.latitude, currentLocationData.longitude),
-  //   );
-
-  //   final GoogleMapController controller = await _controller.future;
-  //   controller.animateCamera(CameraUpdate.newCameraPosition(cPosition));
-  //   setState(() {
-  //     var pinPosition =
-  //         LatLng(currentLocationData.latitude, currentLocationData.longitude);
-  //     _marker.removeWhere((m) => m.markerId.value == "sourcePin");
-  //     _marker.add(Marker(
-  //       markerId: MarkerId("sourcePin"),
-  //       position: pinPosition, // updated position
-  //     ));
-  //   });
-  // }
-  // lu-kIfUIP5ckS9gOo0AxQPCIGoFP20sFanxgHeBmJGs=
+  @override
+  void didChangeDependencies() {
+    if (isTimeout)
+      SchedulerBinding.instance
+          .addPostFrameCallback((_) => handleTimeout(context));
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     CameraPosition _kGooglePlex = CameraPosition(
       target: LatLng(30.3398, 76.3869),
       zoom: 16.4746,
-      bearing: 20,
-      tilt: 50,
+      // bearing: 20,
+      // tilt: 50,
     );
+    log("inside build");
+    if (isTimeout)
+      return AlertDialog(
+        content: Text(
+          'The passkey expired! Try reaching out to host for new passkey!',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        title: Text("Passkey Expired!!"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Navigator.of(context).push;
+              // Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              "OK",
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+        ],
+        elevation: 30,
+      );
+    // return Dialog(
+    //   // context: context,
+    //   // builder: (BuildContext context) =>
+    //   child: Center(
+    //     child: Container(
+    //       height: 120,
+    //       decoration: BoxDecoration(
+    //         borderRadius: BorderRadius.all(
+    //           Radius.circular(16),
+    //         ),
+    //         color: Colors.white30,
+    //       ),
+    //       width: MediaQuery.of(context).size.width * 0.9,
+    //       padding: EdgeInsets.symmetric(horizontal: 16),
+    //       child: Column(
+    //         // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    //         children: [
+    //           Container(
+    //             height: 70,
+    //             alignment: Alignment.center,
+    //             decoration: BoxDecoration(
+    //               border: Border(
+    //                 bottom: BorderSide(
+    //                   width: 1,
+    //                   color: Colors.grey[300],
+    //                 ),
+    //               ),
+    //             ),
+    //             child: Text(
+    //               'The passkey expired! Try reaching out to host for new passkey!',
+    //               style: TextStyle(
+    //                 fontSize: 20,
+    //                 fontWeight: FontWeight.w600,
+    //               ),
+    //             ),
+    //           ),
+    //           TextButton(
+    //             onPressed: () {
+    //               // Navigator.of(context).push;
+    //               // Navigator.of(context).pop();
+    //               Navigator.of(context).pop();
+    //             },
+    //             child: Text(
+    //               "OK",
+    //               style: TextStyle(fontSize: 18),
+    //             ),
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //   ),
+    // );
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       child: FutureBuilder(
@@ -234,8 +376,8 @@ class _MapWidgetState extends State<MapWidget> {
                       currentLocationData.longitude)
                   : LatLng(curr.latitude, curr.longitude),
               zoom: 16.4746,
-              bearing: 20,
-              tilt: 50,
+              // bearing: 20,
+              // tilt: 50,
             );
 
             return GoogleMap(
@@ -253,8 +395,10 @@ class _MapWidgetState extends State<MapWidget> {
               mapType: MapType.normal,
               initialCameraPosition: _kGooglePlex,
               onMapCreated: (GoogleMapController controller) {
-                mapController = controller;
-                _controller.complete(controller);
+                if (!_controller.isCompleted) {
+                  _controller.complete(controller);
+                  mapController = controller;
+                }
               },
               compassEnabled: true,
               myLocationEnabled: true,

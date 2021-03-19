@@ -11,7 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int duration;
+  double duration;
   String username = "Anonymous";
   bool _isShareLocationDialog = false, _isViewDialog = false;
   final ScrollController scrollController = ScrollController();
@@ -30,6 +30,11 @@ class _HomeScreenState extends State<HomeScreen> {
     var values = List<int>.generate(32, (i) => random.nextInt(256));
     cryptoResult = base64Url.encode(values);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -169,7 +174,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                             "userName": "",
                                             "cryptoUsername": nameField.text
                                           });
-                                      FocusScope.of(context).unfocus();                                    }
+                                      FocusScope.of(context).unfocus();
+                                    }
                                   },
                                   child: Text(
                                     "Submit",
@@ -209,12 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     if (_isShareLocationDialog && !_isViewDialog)
-                      // AnimatedContainer(
-                      //   duration: Duration(milliseconds: 100),
-                      //   curve: Curves.slowMiddle,
-                      //   child:
                       shareLocationWidget(context, _formKey2),
-                    // ),
                   ],
                 ),
               ),
@@ -287,17 +288,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               validator: (val) {
                 try {
-                  duration = int.parse(durationController.text);
+                  duration = double.parse(durationController.text);
+                  if (duration <= 0) {
+                    return "Enter value greater than 0";
+                  }
                 } catch (e) {
                   return "Enter a integer value";
                 }
+
                 return null;
               },
               onChanged: (val) {
                 if (_formKey.currentState.validate()) {
                   durationController.value == null
                       ? duration = 1
-                      : duration = int.parse(durationController.text);
+                      : duration = double.parse(durationController.text);
                 }
                 print(duration);
               },
@@ -317,7 +322,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         arguments: {
                           "isSharee": true,
                           "userName": username,
-                          "cryptoUsername": cryptoResult
+                          "cryptoUsername": cryptoResult,
+                          "expiryTimeISO": DateTime.now()
+                              .toUtc()
+                              .add(Duration(seconds: (duration * 60).toInt()))
+                              .toIso8601String(),
                         });
                     durationController.clear();
                     usernameController.clear();
