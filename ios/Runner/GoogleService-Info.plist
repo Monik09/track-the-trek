@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>564184157574-bu9ad32iab24a8bgf4j61rr5ceip00u7.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.564184157574-bu9ad32iab24a8bgf4j61rr5ceip00u7</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>564184157574-ktprqbn320krovan4u2la89c524hue8m.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDtj3QHibolZNvPDkJNSZMVL8MQUk_zehU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>564184157574</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.trackMeBeacon</string>
+	<key>PROJECT_ID</key>
+	<string>track-me-beacon</string>
+	<key>STORAGE_BUCKET</key>
+	<string>track-me-beacon.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:564184157574:ios:0c5f0ecd5058595e043007</string>
+</dict>
+</plist>

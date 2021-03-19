@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "564184157574",
+    "project_id": "track-me-beacon",
+    "storage_bucket": "track-me-beacon.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:564184157574:android:d2ed8fc46cc785b9043007",
+        "android_client_info": {
+          "package_name": "com.example.track_me_beacon"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "564184157574-ktprqbn320krovan4u2la89c524hue8m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.track_me_beacon",
+            "certificate_hash": "2fca51acf4fab53ebc1c765af8744dd704b3001a"
+          }
+        },
+        {
+          "client_id": "564184157574-57j37b1pqkrg1896hrpi66fr7h0dg11p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBo_2j4k_a-PS6Jyw_vKlucuMtg8rYCP_Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "564184157574-57j37b1pqkrg1896hrpi66fr7h0dg11p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
