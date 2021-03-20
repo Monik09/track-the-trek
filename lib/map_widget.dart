@@ -285,6 +285,11 @@ class _MapWidgetState extends State<MapWidget>
     log("inside build");
     if (isTimeout)
       return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(20),
+          ),
+        ),
         content: Text(
           'The passkey expired! Try reaching out to host for new passkey!',
           style: TextStyle(
@@ -292,9 +297,12 @@ class _MapWidgetState extends State<MapWidget>
             fontWeight: FontWeight.w600,
           ),
         ),
-        title: Text("Passkey Expired!!"),
         actions: [
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              primary: Colors.white,
+              alignment: Alignment.center,
+            ),
             onPressed: () {
               // Navigator.of(context).push;
               // Navigator.of(context).pop();
@@ -302,7 +310,7 @@ class _MapWidgetState extends State<MapWidget>
             },
             child: Text(
               "OK",
-              style: TextStyle(fontSize: 18),
+              style: TextStyle(fontSize: 18, color: Colors.blue),
             ),
           ),
         ],
