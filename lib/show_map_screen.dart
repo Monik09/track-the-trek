@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:firebase_database/firebase_database.dart';
 import "package:flutter/material.dart";
 import 'package:share/share.dart';
 import 'package:track_me_beacon/map_widget.dart';
@@ -10,79 +13,138 @@ class ShowMapScreen extends StatefulWidget {
 }
 
 class _ShowMapScreenState extends State<ShowMapScreen> {
-    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final ref = FirebaseDatabase.instance.reference();
   @override
   Widget build(BuildContext context) {
     final Map args = ModalRoute.of(context).settings.arguments as Map;
-    return Scaffold(
-      key:_scaffoldKey,
-      floatingActionButtonLocation: FloatingActionButtonLocation.miniStartTop,
-      floatingActionButton: ElevatedButton(
-        child: Icon(Icons.arrow_back_rounded),
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
-      ),
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        child: Flex(
-          direction: Axis.vertical,
-          mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: MediaQuery.of(context).size.height * 0.8,
-              child: Card(
-                // margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Container(
-                  alignment: Alignment.centerLeft,
-                  // padding: EdgeInsets.symmetric(horizontal: 16),
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  height: MediaQuery.of(context).size.height * 0.8,
-                  // child: Container(),
-                  child: MapWidget(
-                      args["isSharee"], args["userName"],
-                      args["cryptoUsername"],args["expiryTimeISO"]
-                      ),
-                ),
-              ),
-            ),
-            Container(
-              width: double.maxFinite,
-              margin: EdgeInsets.only(bottom: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: IconButton(
-                      icon: Icon(Icons.share_sharp),
-                      onPressed: () {
-                        Share.share(
-                            'Look, where I am. I am sharing my location with a passkey as:' +
-                                args["cryptoUsername"]);
-                      },
-                      color: Colors.white,
-                      iconSize: 30,
-                    ),
-                    radius: 25,
+    if(!args["isSharee"])
+    ref.child("locData").once().then((snapshot) {
+      log(snapshot.value[args["cryptoUsername"]].toString());
+      print(snapshot.value[args["cryptoUsername"]].toString() ?? true);
+      if (snapshot.value[args["cryptoUsername"]] == null) {
+        log("in");
+        return showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(20),
                   ),
-                  CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: IconButton(
-                      icon: Icon(Icons.copy_sharp),
-                      onPressed: () {
-                        ScaffoldMessenger.of(_scaffoldKey.currentContext).showSnackBar(
-                            SnackBar(content: Text("Passkey Copied")));
-                        FlutterClipboard.copy(args["cryptoUsername"])
-                            .then((value) => print('copied'));
-                      },
-                      color: Colors.white,
-                      iconSize: 30,
+                ),
+                title: Text(
+                  "No user found",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).maybePop();
+                    },
+                    child: Text(
+                      "Ok",
+                      style: TextStyle(fontSize: 21),
                     ),
-                    radius: 25,
                   ),
                 ],
+              );
+            },);
+      }
+    },);//tc8Ss8jNzfO53IDkxyg7h31sXcxk87gf8kOcF3ErciU=
+
+    return Scaffold(
+      key: _scaffoldKey,
+       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {},
+      ),
+      bottomNavigationBar: BottomAppBar(
+        clipBehavior: Clip.antiAliasWithSaveLayer,
+        shape: CircularNotchedRectangle(),
+        child: Theme(
+          data: Theme.of(context)
+              .copyWith(canvasColor: Colors.white, primaryColor: Colors.grey),
+          child: BottomNavigationBar(
+            onTap: (index) {
+              if (index == 0) {
+                ScaffoldMessenger.of(_scaffoldKey.currentContext).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text("Passkey Copied", textAlign: TextAlign.center),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(16),
+                      ),
+                    ),
+                    duration: Duration(seconds: 2),
+                    backgroundColor: Colors.black87,
+                    width: 150,
+                  ),
+                );
+                FlutterClipboard.copy(args["cryptoUsername"])
+                    .then((value) => print('copied'));
+              } else {
+                Share.share(
+                    'Look, where I am. I am sharing my location with a passkey as:' +
+                        args["cryptoUsername"]);
+              }
+            },
+            type: BottomNavigationBarType.fixed,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.copy_sharp),
+                label: "Copy Passkey",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.share_sharp),
+                label: "Share Passkey",
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: Flex(
+          direction: Axis.vertical,
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SafeArea(
+              minimum: EdgeInsets.only(
+                left: 6,
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: Icon(
+                  Icons.arrow_back_sharp,
+                  size: 30,
+                ),
+                label: Text(""),
+              ),
+            ),
+            Center(
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                alignment: Alignment.center,
+                // padding: EdgeInsets.symmetric(horizontal: 16),
+                width: MediaQuery.of(context).size.width * 0.95,
+                child: Card(
+                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: MapWidget(
+                     args["isSharee"],
+                     args["userName"],
+                     args["cryptoUsername"],
+                    args["expiryTimeISO"],
+                    ),
+                    ),
               ),
             ),
           ],
