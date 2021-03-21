@@ -64,10 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(
-                height: deviceHeight * 0.1052681,
+                height: deviceHeight * 0.08052681,
               ),
               Container(
-                height: MediaQuery.of(context).size.height * 0.5,
+                height: MediaQuery.of(context).size.height * 0.6,
                 child: Column(
                   children: [
                     Container(
@@ -98,15 +98,48 @@ class _HomeScreenState extends State<HomeScreen> {
                       AnimatedContainer(
                         duration: Duration(milliseconds: 100),
                         curve: Curves.slowMiddle,
-                        height: MediaQuery.of(context).size.height * 0.2,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Form(
-                                key: _formKey,
-                                child: TextFormField(
+                        height: MediaQuery.of(context).size.height * 0.25,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                TextFormField(
+                                  controller: usernameController,
+                                  decoration: InputDecoration(
+                                    labelText: "Name",
+                                    icon: Icon(
+                                      Icons.person_outline_sharp,
+                                      color: Colors.teal,
+                                    ),
+                                    labelStyle: TextStyle(color: textColor),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius:
+                                          new BorderRadius.circular(25.0),
+                                      borderSide: new BorderSide(
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    border: new OutlineInputBorder(
+                                      borderRadius:
+                                          new BorderRadius.circular(25.0),
+                                      borderSide: new BorderSide(
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                  ),
+                                  onEditingComplete: () {
+                                    usernameController.value == null
+                                        ? username = "Anonymous"
+                                        : username = usernameController.text;
+                                    FocusScope.of(context).nextFocus();
+                                    print(username);
+                                  },
+                                ),
+                                SizedBox(height: 5,),
+                                TextFormField(
                                   enableSuggestions: true,
                                   maxLines: 1,
                                   focusNode: nameFieldNode,
@@ -127,7 +160,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ? Colors.teal
                                           : textColor,
                                     ),
-                                    filled: true,
                                     labelStyle: TextStyle(color: textColor),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius:
@@ -152,43 +184,44 @@ class _HomeScreenState extends State<HomeScreen> {
                                         : null;
                                   },
                                 ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: ElevatedButton(
-                                  focusNode: nameSubmitNode,
-                                  style: ElevatedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.bottomCenter,
+                                    child: ElevatedButton(
+                                      focusNode: nameSubmitNode,
+                                      style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        if (_formKey.currentState.validate()) {
+                                          print(nameField.text);
+                                          Navigator.pushNamed(
+                                              context, ShowMapScreen.routeName,
+                                              arguments: {
+                                                "isSharee": false,
+                                                "userName": usernameController.text,
+                                                "cryptoUsername": nameField.text
+                                              });
+                                          FocusScope.of(context).unfocus();
+                                        }
+                                      },
+                                      child: Text(
+                                        "Submit",
+                                        style: TextStyle(fontSize: 20),
+                                      ),
                                     ),
                                   ),
-                                  onPressed: () {
-                                    if (_formKey.currentState.validate()) {
-                                      print(nameField.text);
-                                      Navigator.pushNamed(
-                                          context, ShowMapScreen.routeName,
-                                          arguments: {
-                                            "isSharee": false,
-                                            "userName": "",
-                                            "cryptoUsername": nameField.text
-                                          });
-                                      FocusScope.of(context).unfocus();
-                                    }
-                                  },
-                                  child: Text(
-                                    "Submit",
-                                    style: TextStyle(fontSize: 20),
-                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     SizedBox(
-                      height: 10,
+                      height: 5,
                     ),
                     Container(
                       decoration: BoxDecoration(
