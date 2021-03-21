@@ -49,22 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               WavyHeader(),
-              FittedBox(
-                child: Container(
-                  padding: EdgeInsets.all(8),
-                  child: Text(
-                    "Flutter Beacon",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 45.0,
-                      fontWeight: FontWeight.w400,
-                      color: textColor,
-                    ),
-                  ),
-                ),
-              ),
               SizedBox(
-                height: deviceHeight * 0.08052681,
+                height: deviceHeight * 0.06052681,
               ),
               Container(
                 height: MediaQuery.of(context).size.height * 0.6,
